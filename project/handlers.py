@@ -2,9 +2,9 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove, FSInputFile
-from keyboards.user_choice import get_log_in_out, get_log_out
+from keyboards import get_log_in_out, get_log_out, choose_contact
 from aiogram.filters.command import Command
-from logic import log_in, log_out, delete_contact
+from logic import log_in, log_out
 from bot_replies import constants
 
 router = Router()
@@ -23,7 +23,7 @@ class FSMKbLevels(StatesGroup):
 @router.message(Command('start'))
 async def cmd_start(message: Message, state: FSMContext):
     await message.answer(
-        constants.Messages.INITIAL_MESSAGE,
+        constants.BotTextEnum.INITIAL_MESSAGE,
         reply_markup=get_log_in_out()
     )
     await state.set_state(FSMKbLevels.choose_operation_type)
@@ -42,21 +42,25 @@ async def cmd_start(message: Message, state: FSMContext):
 async def choose_operation(message: Message, state: FSMContext):
     if message.text == "Записать контакт":
         await message.reply(
-            constants.Messages.LOG_IN_CONTACT,
+            constants.BotTextEnum.LOG_IN_CONTACT,
             reply_markup=ReplyKeyboardRemove()
         )
         await state.set_state(FSMKbLevels.log_in_operation)
     elif message.text == "Посмотреть контакт":
         await message.answer(
-            constants.Messages.LOG_OUT_FORMAT,
+            constants.BotTextEnum.LOG_OUT_FORMAT,
             reply_markup=get_log_out()
         )
         await state.set_state(FSMKbLevels.log_out_operation)
     elif message.text == "Удалить контакт":
         await message.answer(
-            constants.Messages.DELETE_CONTACT,
-            reply_markup=ReplyKeyboardRemove()
+            'Выберете контакт',
+            reply_markup=choose_contact()
         )
+        # await message.answer(
+        #     constants.Messages.DELETE_CONTACT,
+        #     reply_markup=ReplyKeyboardRemove()
+        # )
         await state.set_state(FSMKbLevels.delete_contact)
     elif message.text == "Показать файл":
         await message.reply_document(FSInputFile('phone_book.txt'))
@@ -67,13 +71,13 @@ async def log_in_operation(message: Message, state: FSMContext):
     line = message.text
     if log_in.log_in(line):
         await message.answer(
-            constants.Messages.LOGGED_IN_SUCCESS,
+            constants.BotTextEnum.LOGGED_IN_SUCCESS,
             reply_markup=get_log_in_out()
         )
         await state.set_state(FSMKbLevels.choose_operation_type)
     else:
         await message.answer(
-            constants.Messages.LOGGED_IN_ERROR
+            constants.BotTextEnum.LOGGED_IN_ERROR
         )
 
 
@@ -81,13 +85,13 @@ async def log_in_operation(message: Message, state: FSMContext):
 async def log_out_operation(message: Message, state: FSMContext):
     if message.text == "Показать контакт одной строкой":
         await message.answer(
-            constants.Messages.LOG_OUT_CONTACT,
+            constants.BotTextEnum.LOG_OUT_CONTACT,
             reply_markup=ReplyKeyboardRemove()
         )
         await state.set_state(FSMKbLevels.log_out_one_line)
     elif message.text == "Показать контакт в несколько строк":
         await message.answer(
-            constants.Messages.LOG_OUT_CONTACT,
+            constants.BotTextEnum.LOG_OUT_CONTACT,
             reply_markup=ReplyKeyboardRemove()
         )
         await state.set_state(FSMKbLevels.log_out_lines)
@@ -112,7 +116,7 @@ async def logging_out_one_line(message: Message, state: FSMContext):
         await state.set_state(FSMKbLevels.choose_operation_type)
     else:
         await message.answer(
-            constants.Messages.CONTACT_NOT_FOUND,
+            constants.BotTextEnum.CONTACT_NOT_FOUND,
             reply_markup=get_log_in_out()
         )
         await state.set_state(FSMKbLevels.choose_operation_type)
@@ -131,7 +135,7 @@ async def logging_out_lines(message: Message, state: FSMContext):
         await state.set_state(FSMKbLevels.choose_operation_type)
     else:
         await message.answer(
-            constants.Messages.CONTACT_NOT_FOUND,
+            constants.BotTextEnum.CONTACT_NOT_FOUND,
             reply_markup=get_log_in_out()
         )
         await state.set_state(FSMKbLevels.choose_operation_type)
@@ -140,15 +144,15 @@ async def logging_out_lines(message: Message, state: FSMContext):
 @router.message(FSMKbLevels.delete_contact)
 async def delete(message: Message, state: FSMContext):
     msg = message.text
-    if delete_contact.delete_contact(msg):
-        await message.reply(
-            "Контакт успешно удален",
-            reply_markup=get_log_in_out()
-        )
-        await state.set_state(FSMKbLevels.choose_operation_type)
-    else:
-        await message.answer(
-            constants.Messages.CONTACT_NOT_FOUND,
-            reply_markup=get_log_in_out()
-        )
-        await state.set_state(FSMKbLevels.choose_operation_type)
+    # if delete_contact.delete_contact(msg):
+    #     await message.reply(
+    #         "Контакт успешно удален",
+    #         reply_markup=get_log_in_out()
+    #     )
+    #     await state.set_state(FSMKbLevels.choose_operation_type)
+    # else:
+    #     await message.answer(
+    #         constants.Messages.CONTACT_NOT_FOUND,
+    #         reply_markup=get_log_in_out()
+    #     )
+    #     await state.set_state(FSMKbLevels.choose_operation_type)
