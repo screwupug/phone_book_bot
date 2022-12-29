@@ -6,7 +6,7 @@ from project import handlers
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    bot = Bot(token="")
+    bot = Bot(token="os.getenv(“TOKEN”)")
     dp = Dispatcher()
 
     dp.include_router(handlers.router)
