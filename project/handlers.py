@@ -5,10 +5,10 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.handlers import ErrorHandler
 from aiogram.types import Message, ReplyKeyboardRemove, FSInputFile
 from aiogram.filters.command import Command
-from project.constants import BotTextEnum, UserTextEnum
+from project.constants import BotTextEnum, UserTextEnum, LoggerTextEnum
 from project import logic
 from project.keyboards import BACK_KEYBOARD, CHOOSE_OPERATION_KEYBOARD, CHOOSE_CONTACT_VIEW_KEYBOARD, \
-    choose_contact_for_operation, CHOOSE_FILE_DOWNLOAD_FORMAT, CHOOSE_CHANGE_CONTACT_OPTION_KEYBOARD
+    choose_contact_for_operation, CHOOSE_CHANGE_CONTACT_OPTION_KEYBOARD
 import os
 
 router = Router()
@@ -21,7 +21,6 @@ class UserState(StatesGroup):
     """
     CHOOSE_OPERATION_TYPE = State()
     DELETE_CONTACT = State()
-    GET_FILE = State()
     WRITE_CONTACT_OPERATION = State()
     SHOW_CONTACT_OPERATION = State()
     SHOW_CONTACT_ONE_LINE = State()
@@ -34,8 +33,6 @@ class UserState(StatesGroup):
     CHANGE_LAST_NAME = State()
     CHANGE_PHONE_NUMBER = State()
     CHANGE_CONTACT_DESCRIPTION = State()
-    DOWNLOAD_TXT_FILE = State()
-    DOWNLOAD_CSV_FILE = State()
 
 
 @router.errors()
@@ -44,7 +41,7 @@ class RouterErrorHandler(ErrorHandler):
         """
         Обработчик ошибок в хэндлерах бота
         """
-        # logger.exception(self.event.exception)
+        logic.logger('error', str(self.event.exception))
         await self.bot.send_message(
             chat_id=self.event.update.message.chat.id,
             text=BotTextEnum.ERROR_TEXT.format(self.event.exception),
@@ -64,6 +61,7 @@ async def cmd_start(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.STARTED_BOT)
 
 
 @router.message(Command('back'))
@@ -76,6 +74,7 @@ async def cmd_back(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_BACK_IN_MAIN_MENU)
 
 
 @router.message(Text(text=UserTextEnum.BACK))
@@ -88,6 +87,7 @@ async def cmd_back(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_BACK)
 
 
 @router.message(
@@ -103,6 +103,7 @@ async def choose_write_operation(message: Message, state: FSMContext):
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.WRITE_CONTACT_OPERATION)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_WRITE_CONTACT)
 
 
 @router.message(
@@ -122,6 +123,7 @@ async def choose_show_operation(message: Message, state: FSMContext):
         reply_markup=CHOOSE_CONTACT_VIEW_KEYBOARD
     )
     await state.set_state(UserState.SHOW_CONTACT_OPERATION)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_SHOW_CONTACT)
 
 
 @router.message(
@@ -141,6 +143,7 @@ async def choose_change_operation(message: Message, state: FSMContext):
         reply_markup=choose_contact_for_operation(message.chat.username)
     )
     await state.set_state(UserState.CHANGE_CONTACT)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_CHANGE_CONTACT)
 
 
 @router.message(
@@ -160,6 +163,7 @@ async def choose_delete_operation(message: Message, state: FSMContext):
         reply_markup=choose_contact_for_operation(message.chat.username)
     )
     await state.set_state(UserState.DELETE_CONTACT)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_DELETE_CONTACT)
 
 
 @router.message(UserState.WRITE_CONTACT_OPERATION)
@@ -175,6 +179,7 @@ async def write_operation(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.HAS_WRITTEN_CONTACT)
 
 
 @router.message(
@@ -190,6 +195,8 @@ async def show_contact_one_line(message: Message, state: FSMContext):
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.SHOW_CONTACT_ONE_LINE)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_SHOW_CONTACT_ONE_LINE)
+
 
 
 @router.message(
@@ -199,13 +206,13 @@ async def show_contact_one_line(message: Message, state: FSMContext):
 async def show_contact_in_lines(message: Message, state: FSMContext):
     """
     Handling command "Show contact in lines"
-
     """
     await message.reply(
         BotTextEnum.LOG_OUT_CONTACT,
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.SHOW_CONTACT_IN_LINES)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_SHOW_CONTACT_IN_LINES)
 
 
 @router.message(
@@ -215,13 +222,13 @@ async def show_contact_in_lines(message: Message, state: FSMContext):
 async def show_contact_card(message: Message, state: FSMContext):
     """
     Handling command "Show contact card"
-
     """
     await message.reply(
         BotTextEnum.LOG_OUT_CONTACT,
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.SHOW_CONTACT_CARD)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_SHOW_CONTACT_CARD)
 
 
 @router.message(
@@ -237,6 +244,7 @@ async def show_all_contacts(message: Message, state: FSMContext):
         reply_markup=choose_contact_for_operation(message.chat.username)
     )
     await state.set_state(UserState.SHOW_ALL_CONTACTS)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_SHOW_ALL_CONTACTS)
 
 
 @router.message(
@@ -245,7 +253,6 @@ async def show_all_contacts(message: Message, state: FSMContext):
 async def show_contact_in_one_line_final(message: Message, state: FSMContext):
     """
     Handling SHOW_CONTACT_ONE_LINE state
-
     """
     await message.reply(
         text=', '.join(logic.show_line(
@@ -254,6 +261,7 @@ async def show_contact_in_one_line_final(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.GET_CONTACT_ONE_LINE)
 
 
 @router.message(
@@ -262,7 +270,6 @@ async def show_contact_in_one_line_final(message: Message, state: FSMContext):
 async def show_contact_in_lines_final(message: Message, state: FSMContext):
     """
     Handling SHOW_CONTACT_IN_LINES state
-
     """
     line = logic.show_line(
         message.text,
@@ -274,6 +281,7 @@ async def show_contact_in_lines_final(message: Message, state: FSMContext):
             reply_markup=CHOOSE_OPERATION_KEYBOARD
         )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.GET_CONTACT_IN_LINES)
 
 
 @router.message(
@@ -282,7 +290,6 @@ async def show_contact_in_lines_final(message: Message, state: FSMContext):
 async def show_contact_card_final(message: Message, state: FSMContext):
     """
     Handling SHOW_CONTACT_CARD state
-
     """
     first_name, last_name, phone_number, description = logic.show_line(
         message.text,
@@ -296,6 +303,7 @@ async def show_contact_card_final(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.GET_CONTACT_CARD)
 
 
 @router.message(
@@ -328,6 +336,7 @@ async def choose_change_first_name(message: Message, state: FSMContext):
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.CHANGE_FIRST_NAME)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_CHANGE_FIRST_NAME)
 
 
 @router.message(
@@ -343,6 +352,7 @@ async def choose_change_last_name(message: Message, state: FSMContext):
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.CHANGE_LAST_NAME)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_CHANGE_LAST_NAME)
 
 
 @router.message(
@@ -358,6 +368,7 @@ async def choose_change_phone_number(message: Message, state: FSMContext):
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.CHANGE_PHONE_NUMBER)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_CHANGE_PHONE_NUMBER)
 
 
 @router.message(
@@ -373,6 +384,7 @@ async def choose_change_contact_description(message: Message, state: FSMContext)
         reply_markup=BACK_KEYBOARD
     )
     await state.set_state(UserState.CHANGE_CONTACT_DESCRIPTION)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_CHANGE_DESCRIPTION)
 
 
 @router.message(
@@ -393,6 +405,7 @@ async def choose_change_first_name_final(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.HAS_CHANGED_FIRST_NAME)
 
 
 @router.message(
@@ -413,6 +426,7 @@ async def choose_change_last_name_final(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.HAS_CHANGED_LAST_NAME)
 
 
 @router.message(
@@ -433,6 +447,7 @@ async def choose_change_phone_number_final(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.HAS_CHANGED_PHONE_NUMBER)
 
 
 @router.message(
@@ -453,6 +468,7 @@ async def choose_change_contact_description_final(message: Message, state: FSMCo
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.HAS_CHANGED_DESCRIPTION)
 
 
 @router.message(
@@ -468,6 +484,7 @@ async def delete_contact(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.HAS_DELETED_CONTACT)
 
 
 @router.message(
@@ -478,21 +495,6 @@ async def get_file(message: Message, state: FSMContext):
     """
     Handling "Download file" command
     """
-    await message.reply(
-        BotTextEnum.CHOOSE_FILE_FORMAT,
-        reply_markup=CHOOSE_FILE_DOWNLOAD_FORMAT
-    )
-    await state.set_state(UserState.GET_FILE)
-
-
-@router.message(
-    UserState.GET_FILE,
-    Text(text=UserTextEnum.DOWNLOAD_TXT_FILE)
-)
-async def get_txt_file(message: Message, state: FSMContext):
-    """
-    Handling GET_FILE state, downloading txt file
-    """
     assert os.path.exists(logic.get_path_txt(message.chat.username)), \
         "Телефонная книга пуста, запишите хотя бы один контакт"
     assert os.path.getsize(logic.get_path_txt(message.chat.username)), \
@@ -502,22 +504,5 @@ async def get_txt_file(message: Message, state: FSMContext):
         reply_markup=CHOOSE_OPERATION_KEYBOARD
     )
     await state.set_state(UserState.CHOOSE_OPERATION_TYPE)
+    logic.logger(message.chat.username, LoggerTextEnum.PUSHED_DOWNLOAD_FILE)
 
-
-@router.message(
-    UserState.GET_FILE,
-    Text(text=UserTextEnum.DOWNLOAD_CSV_FILE)
-)
-async def get_csv_file(message: Message, state: FSMContext):
-    """
-    Handling GET_FILE state, downloading csv file
-    """
-    assert os.path.exists(logic.get_path_csv(message.chat.username)), \
-        "Телефонная книга пуста, запишите хотя бы один контакт"
-    assert os.path.getsize(logic.get_path_csv(message.chat.username)), \
-        "Телефонная книга пуста, запишите хотя бы один контакт"
-    await message.answer_document(
-        FSInputFile(logic.get_path_csv(message.chat.username)),
-        reply_markup=CHOOSE_OPERATION_KEYBOARD
-    )
-    await state.set_state(UserState.CHOOSE_OPERATION_TYPE)

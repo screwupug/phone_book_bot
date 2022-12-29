@@ -1,5 +1,6 @@
 import os
-import csv
+import datetime
+from pathlib import Path
 
 
 def get_path_txt(user_name: str) -> str:
@@ -10,16 +11,6 @@ def get_path_txt(user_name: str) -> str:
     """
     return os.path.join('phone_books', f'phone_book_{user_name}.txt')
 
-
-def get_path_csv(user_name: str) -> str:
-    """
-    Generate filepath
-    :param user_name: User-name
-    :return: filepath
-    """
-    return os.path.join('phone_books', f'phone_book_{user_name}.csv')
-
-
 def handle_line(line: str) -> list[str, ...]:
     """
     Handling line and deleting backspaces and punctuation marks
@@ -27,7 +18,6 @@ def handle_line(line: str) -> list[str, ...]:
     :return: handle result
     """
     lst = line.split(', ')
-    print(lst)
     return lst
 
 
@@ -66,9 +56,6 @@ def write_line(line: list[str, ...], user_name: str):
     """
     with open(get_path_txt(user_name), 'a', encoding='utf-8') as file:
         file.write(', '.join(line) + '\n')
-    with open(get_path_csv(user_name), 'a', newline='') as f:
-        writer = csv.writer(f, delimiter=',')
-        writer.writerow(line)
 
 
 def show_line(line: str, user_name: str) -> list:
@@ -101,12 +88,9 @@ def delete_contact(line: str, user_name: str):
     for item in lines:
         if line in item:
             lines.remove(item)
-    non_empty_lines = (line for line in lines if not line.isspace())
+    lines = list(filter(None, lines))
     with open(get_path_txt(user_name), 'w', encoding='utf-8') as F:
-        F.writelines(non_empty_lines)
-    with open(get_path_csv(user_name), 'w', newline='') as f:
-        writer = csv.writer(f, delimiter=',')
-        writer.writerow(non_empty_lines)
+        F.writelines(lines)
 
 
 def change_contact(line: str, user_name: str, field_number: int, field_for_change: str):
@@ -126,8 +110,18 @@ def change_contact(line: str, user_name: str, field_number: int, field_for_chang
             line_to_change = item.split(', ')
     line_to_change[field_number] = field_for_change
     file_lines.append(", ".join(line_to_change) + '\n')
+    file_lines = list(filter(None, file_lines))
     with open(get_path_txt(user_name), 'w', encoding='utf-8') as file:
         file.writelines(file_lines)
-    with open(get_path_csv(user_name), 'w', newline='') as f:
-        writer = csv.writer(f, delimiter=',')
-        writer.writerow(file_lines)
+
+
+def logger(user_name: str, action_name: str):
+    """
+    Log all actions in file
+    :param user_name: user-name
+    :param action_name: action-name
+    """
+    path = Path('logger', 'logs.txt')
+    with open(path, 'a', encoding='utf-8') as file:
+        file.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | "
+                   f"user - {user_name} | action - {action_name}\n")

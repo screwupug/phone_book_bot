@@ -43,16 +43,6 @@ CHOOSE_CHANGE_CONTACT_OPTION_KEYBOARD = ReplyKeyboardMarkup(
     input_field_placeholder=UserTextEnum.PLACEHOLDER
 )
 
-CHOOSE_FILE_DOWNLOAD_FORMAT = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text=UserTextEnum.DOWNLOAD_CSV_FILE)],
-        [KeyboardButton(text=UserTextEnum.DOWNLOAD_TXT_FILE)],
-        [KeyboardButton(text=UserTextEnum.BACK)]
-    ],
-    resize_keyboard=True,
-    input_field_placeholder=UserTextEnum.PLACEHOLDER
-)
-
 BACK_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text=UserTextEnum.BACK)]
