@@ -11,6 +11,7 @@ def get_path_txt(user_name: str) -> str:
     """
     return os.path.join('phone_books', f'phone_book_{user_name}.txt')
 
+
 def handle_line(line: str) -> list[str, ...]:
     """
     Handling line and deleting backspaces and punctuation marks
@@ -54,6 +55,8 @@ def write_line(line: list[str, ...], user_name: str):
     :param line: contact info
     :param user_name: user-name
     """
+    if not os.path.isdir("phone_books"):
+        os.mkdir("phone_books")
     with open(get_path_txt(user_name), 'a', encoding='utf-8') as file:
         file.write(', '.join(line) + '\n')
 
@@ -121,7 +124,9 @@ def logger(user_name: str, action_name: str):
     :param user_name: user-name
     :param action_name: action-name
     """
-    path = Path('logger', 'logs.txt')
+    path = os.path.join('logger', 'logs.txt')
+    if not os.path.isdir("logger"):
+        os.mkdir("logger")
     with open(path, 'a', encoding='utf-8') as file:
         file.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | "
                    f"user - {user_name} | action - {action_name}\n")

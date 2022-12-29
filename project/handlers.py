@@ -458,7 +458,7 @@ async def choose_change_contact_description_final(message: Message, state: FSMCo
     Handling CHANGE_CONTACT_DESCRIPTION state
     """
     logic.change_contact(
-        line_to_change,
+        line_to_change.lower(),
         message.chat.username,
         3,
         message.text
