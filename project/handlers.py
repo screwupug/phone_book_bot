@@ -458,10 +458,10 @@ async def choose_change_contact_description_final(message: Message, state: FSMCo
     Handling CHANGE_CONTACT_DESCRIPTION state
     """
     logic.change_contact(
-        line_to_change.lower(),
+        line_to_change,
         message.chat.username,
         3,
-        message.text
+        message.text.lower()
     )
     await message.answer(
         BotTextEnum.CHANGED_SUCCESS,
